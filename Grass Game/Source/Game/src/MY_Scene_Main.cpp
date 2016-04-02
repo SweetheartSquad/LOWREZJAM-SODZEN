@@ -7,6 +7,8 @@
 
 #include <MeshFactory.h>
 
+#include <CubeMap.h>
+
 MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	MY_Scene_Base(_game),
 	screenSurfaceShader(new Shader("assets/RenderSurface_1", false, true)),
@@ -18,9 +20,17 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	screenSurfaceShader->incrementReferenceCount();
 	screenFBO->incrementReferenceCount();
 
+	screenSurface->setScaleMode(GL_NEAREST);
 
+	MeshInterface * m = MeshFactory::getCubeMesh();
+	m->pushTexture2D(Scenario::defaultTexture->texture);
+	t = childTransform->addChild(new MeshEntity(m, baseShader));
 
-	t = childTransform->addChild(new MeshEntity(MeshFactory::getCubeMesh(), baseShader));
+	// add a cubemap (cubemaps use a special texture type and shader component. these can be instantiated separately if desired, but the CubeMap class handles them both for us)
+	CubeMap * cubemap = new CubeMap("assets/textures/cubemap", "png");
+	childTransform->addChild(cubemap);
+
+	sweet::setCursorMode(GLFW_CURSOR_DISABLED);
 }
 
 MY_Scene_Main::~MY_Scene_Main(){
@@ -33,7 +43,7 @@ MY_Scene_Main::~MY_Scene_Main(){
 
 
 void MY_Scene_Main::update(Step * _step){
-	t->rotate(1, 1, 1, 1, kOBJECT);
+	t->rotate(1, 0.33, 0.33, 0.34, kOBJECT);
 
 	// Screen shader update
 	// Screen shaders are typically loaded from a file instead of built using components, so to update their uniforms
@@ -52,8 +62,16 @@ void MY_Scene_Main::update(Step * _step){
 }
 
 void MY_Scene_Main::render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions){
+	glm::uvec2 sd = sweet::getWindowDimensions();
+	int max = glm::max(sd.x, sd.y);
+	int min = glm::min(sd.x, sd.y);
+	bool horz = sd.x == max;
+	int offset = (max - min)/2;
+
 	// keep our screen framebuffer up-to-date with the current viewport
-	screenFBO->resize(_renderOptions->viewPortDimensions.width, _renderOptions->viewPortDimensions.height);
+	screenFBO->resize(64, 64);
+	_renderOptions->setViewPort(0,0,64,64);
+	_renderOptions->setClearColour(1,0,1,0);
 
 	// bind our screen framebuffer
 	FrameBufferInterface::pushFbo(screenFBO);
@@ -64,6 +82,7 @@ void MY_Scene_Main::render(sweet::MatrixStack * _matrixStack, RenderOptions * _r
 	FrameBufferInterface::popFbo();
 
 	// render our screen framebuffer using the standard render surface
+	_renderOptions->setViewPort(horz ? offset : 0, horz ? 0 : offset, min, min);
 	screenSurface->render(screenFBO->getTextureId());
 
 	// render the uiLayer after the screen surface in order to avoid hiding it through shader code
