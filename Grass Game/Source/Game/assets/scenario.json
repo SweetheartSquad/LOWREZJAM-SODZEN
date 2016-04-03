@@ -1,3 +1,52 @@
 {
-  "assets": []
+  "assets": [
+  	{
+  		"type": "mesh",
+  		"id": "POT",
+  		"src": "pot.obj"
+  	},{
+  		"type": "mesh",
+  		"id": "ENVIRONMENT",
+  		"src": "environment.obj"
+  	},{
+  		"type": "mesh",
+  		"id": "CLOUDS",
+  		"src": "clouds.obj"
+  	},{
+  		"type": "mesh",
+  		"id": "CAN",
+  		"src": "watering_can.obj"
+  	},{
+  		"type": "mesh",
+  		"id": "GRASS",
+  		"src": "grass.obj"
+  	}
+
+  	,{
+  		"type": "texture",
+  		"id": "POT",
+  		"src": "pot.png",
+  		"generateMipmaps": false
+  	},{
+  		"type": "texture",
+  		"id": "ENVIRONMENT",
+  		"src": "environment.png",
+  		"generateMipmaps": false
+  	},{
+  		"type": "texture",
+  		"id": "CLOUDS",
+  		"src": "clouds.png",
+  		"generateMipmaps": false
+  	},{
+  		"type": "texture",
+  		"id": "CAN",
+  		"src": "watering_can.png",
+  		"generateMipmaps": false
+  	},{
+  		"type": "texture",
+  		"id": "GRASS",
+  		"src": "grass.png",
+  		"generateMipmaps": false
+  	}
+  ]
 }

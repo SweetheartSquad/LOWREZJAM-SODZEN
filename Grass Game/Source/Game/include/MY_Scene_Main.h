@@ -29,7 +29,7 @@ public:
 
 	MY_Scene_Main(Game * _game);
 	~MY_Scene_Main();
-
-
-	Transform * t;
+	
+	MeshEntity * grass;
+	MeshEntity * can;
 };

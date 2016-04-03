@@ -28,14 +28,32 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	screenFBO->incrementReferenceCount();
 
 	screenSurface->setScaleMode(GL_NEAREST);
+	
 
-	MeshInterface * m = MeshFactory::getCubeMesh();
-	m->pushTexture2D(Scenario::defaultTexture->texture);
-	t = childTransform->addChild(new MeshEntity(m, baseShader));
+	MeshEntity * clouds = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("CLOUDS")->meshes.at(0), baseShader);
+	clouds->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("CLOUDS")->texture);
+	clouds->mesh->setScaleMode(GL_NEAREST);
+	childTransform->addChild(clouds);
 
-	// add a cubemap (cubemaps use a special texture type and shader component. these can be instantiated separately if desired, but the CubeMap class handles them both for us)
-	CubeMap * cubemap = new CubeMap("assets/textures/cubemap", "png");
-	childTransform->addChild(cubemap);
+	MeshEntity * environment = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("ENVIRONMENT")->meshes.at(0), baseShader);
+	environment->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("ENVIRONMENT")->texture);
+	environment->mesh->setScaleMode(GL_NEAREST);
+	childTransform->addChild(environment);
+
+	MeshEntity * pot = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("POT")->meshes.at(0), baseShader);
+	pot->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("POT")->texture);
+	pot->mesh->setScaleMode(GL_NEAREST);
+	childTransform->addChild(pot);
+
+	grass = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("GRASS")->meshes.at(0), baseShader);
+	grass->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("GRASS")->texture);
+	grass->mesh->setScaleMode(GL_NEAREST);
+	childTransform->addChild(grass);
+
+	can = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("CAN")->meshes.at(0), baseShader);
+	can->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("CAN")->texture);
+	can->mesh->setScaleMode(GL_NEAREST);
+	childTransform->addChild(can);
 
 	sweet::setCursorMode(GLFW_CURSOR_NORMAL);
 
@@ -55,8 +73,6 @@ MY_Scene_Main::~MY_Scene_Main(){
 
 
 void MY_Scene_Main::update(Step * _step){
-	t->rotate(1, 0.33, 0.33, 0.34, kOBJECT);
-
 	// Screen shader update
 	// Screen shaders are typically loaded from a file instead of built using components, so to update their uniforms
 	// we need to use the OpenGL API calls
@@ -69,7 +85,7 @@ void MY_Scene_Main::update(Step * _step){
 	}
 
 
-	zoom += mouse->getMouseWheelDelta();
+	zoom -= mouse->getMouseWheelDelta();
 	zoom = glm::clamp(zoom, 1.f, 10.f);
 	gameCamPolarCoords.y += (zoom - gameCamPolarCoords.y) * 0.05f;
 	gameCamPolarCoords.y = glm::clamp(gameCamPolarCoords.y, 1.f, 10.f);
@@ -77,24 +93,25 @@ void MY_Scene_Main::update(Step * _step){
 	if(mouse->leftDown()){
 		if(!mouse->leftJustPressed()){
 			orbitalSpeed += ((mouse->mouseX() - mouseX) - orbitalSpeed) * 0.1f;
-			targetOrbitalHeight += ((mouse->mouseY() - mouseY)) * 0.025f;
+			targetOrbitalHeight -= ((mouse->mouseY() - mouseY)) * 0.025f;
 		}
 		mouseX = mouse->mouseX();
 		mouseY = mouse->mouseY();
 	}
 	
-	targetOrbitalHeight = glm::clamp(targetOrbitalHeight, 1.f, 5.f);
-	orbitalSpeed = glm::clamp(orbitalSpeed, -5.f, 5.f);
+	targetOrbitalHeight = glm::clamp(targetOrbitalHeight, 1.f, 10.f);
+	orbitalSpeed = glm::clamp(orbitalSpeed, -15.f, 15.f);
 
 	orbitalHeight += (targetOrbitalHeight - orbitalHeight) * 0.1f;
 
 	gameCamPolarCoords.x += _step->deltaTimeCorrection * 0.005f * orbitalSpeed;
+
 	gameCam->firstParent()->translate(glm::vec3(glm::sin(gameCamPolarCoords.x) * gameCamPolarCoords.y, orbitalHeight, glm::cos(gameCamPolarCoords.x) * gameCamPolarCoords.y), false);
 
 	// Scene update
 	MY_Scene_Base::update(_step);
 	
-	gameCam->lookAtSpot = glm::vec3(0);
+	gameCam->lookAtSpot = glm::vec3(0,0,0);
 	gameCam->forwardVectorRotated = gameCam->lookAtSpot - gameCam->getWorldPos();
 	//gameCam->childTransform->lookAt(glm::vec3(0));
 }
