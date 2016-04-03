@@ -150,7 +150,7 @@ void MY_Scene_Main::update(Step * _step){
 	gameCam->lookAtSpot = glm::vec3(0,1.5,0);
 	gameCam->forwardVectorRotated = gameCam->lookAtSpot - gameCam->getWorldPos();
 	gameCam->rightVectorRotated = glm::cross(gameCam->forwardVectorRotated, glm::vec3(0, 1, 0));
-	can->childTransform->translate(gameCam->forwardVectorRotated*0.25f * ((orbitalHeight+zoom) * 0.1f) + gameCam->rightVectorRotated*0.5f * (1.2f - orbitalHeight * 0.1f) - gameCam->upVectorRotated*1.5f, false);
+	can->childTransform->translate(gameCam->forwardVectorRotated * ((orbitalHeight+zoom*0.75f) * 0.025f) + gameCam->rightVectorRotated*0.5f * (1.2f - orbitalHeight * 0.1f) - gameCam->upVectorRotated*1.5f, false);
 }
 
 void MY_Scene_Main::render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions){
