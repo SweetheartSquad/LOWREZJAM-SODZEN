@@ -148,7 +148,7 @@ void MY_Scene_Main::update(Step * _step){
 
 
 	// watering
-	if(mouse->rightDown() || orbitalHeight > 7.5){
+	if(/*mouse->rightDown() || */orbitalHeight > 6.5){
 		grassShaderOffset->yOffset += 0.001f;
 		grassShaderOffset->makeDirty();
 
