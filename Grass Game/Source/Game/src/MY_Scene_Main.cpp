@@ -6,6 +6,7 @@
 #include <RenderOptions.h>
 
 #include <MeshFactory.h>
+#include <DirectionalLight.h>
 
 #include <CubeMap.h>
 
@@ -61,6 +62,10 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	childTransform->addChild(gameCam);
 	cameras.push_back(gameCam);
 	activeCamera = gameCam;
+
+	DirectionalLight * l = new DirectionalLight(glm::vec3(1), 0.99999);
+	childTransform->addChild(l)->translate(1,1,1);
+	lights.push_back(l);
 }
 
 MY_Scene_Main::~MY_Scene_Main(){
@@ -86,7 +91,7 @@ void MY_Scene_Main::update(Step * _step){
 
 
 	zoom -= mouse->getMouseWheelDelta();
-	zoom = glm::clamp(zoom, 1.f, 10.f);
+	zoom = glm::clamp(zoom, 3.f, 10.f);
 	gameCamPolarCoords.y += (zoom - gameCamPolarCoords.y) * 0.05f;
 	gameCamPolarCoords.y = glm::clamp(gameCamPolarCoords.y, 1.f, 10.f);
 
@@ -111,7 +116,7 @@ void MY_Scene_Main::update(Step * _step){
 	// Scene update
 	MY_Scene_Base::update(_step);
 	
-	gameCam->lookAtSpot = glm::vec3(0,0,0);
+	gameCam->lookAtSpot = glm::vec3(0,1.5,0);
 	gameCam->forwardVectorRotated = gameCam->lookAtSpot - gameCam->getWorldPos();
 	//gameCam->childTransform->lookAt(glm::vec3(0));
 }
