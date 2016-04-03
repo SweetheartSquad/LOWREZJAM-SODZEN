@@ -8,7 +8,10 @@
 #include <MeshFactory.h>
 #include <DirectionalLight.h>
 
-#include <CubeMap.h>
+#include <shader\ShaderComponentTexture.h>
+#include <shader\ShaderComponentDiffuse.h>
+#include <shader\ShaderComponentMVP.h>
+#include <shader\ShaderComponentUvOffset.h>
 
 MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	MY_Scene_Base(_game),
@@ -29,6 +32,16 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	screenFBO->incrementReferenceCount();
 
 	screenSurface->setScaleMode(GL_NEAREST);
+
+
+	grassShader = new ComponentShaderBase(true);
+	grassShader->addComponent(new ShaderComponentMVP(grassShader));
+	grassShader->addComponent(new ShaderComponentDiffuse(grassShader));
+	grassShader->addComponent(new ShaderComponentTexture(grassShader));
+	grassShader->addComponent(grassShaderOffset = new ShaderComponentUvOffset(grassShader));
+	grassShader->compileShader();
+	grassShader->incrementReferenceCount();
+	grassShader->name = "grass shader";
 	
 
 	MeshEntity * clouds = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("CLOUDS")->meshes.at(0), baseShader);
@@ -46,7 +59,7 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	pot->mesh->setScaleMode(GL_NEAREST);
 	childTransform->addChild(pot);
 
-	grass = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("GRASS")->meshes.at(0), baseShader);
+	grass = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("GRASS")->meshes.at(0), grassShader);
 	grass->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("GRASS")->texture);
 	grass->mesh->setScaleMode(GL_NEAREST);
 	childTransform->addChild(grass);
@@ -69,7 +82,8 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 }
 
 MY_Scene_Main::~MY_Scene_Main(){
-	
+	grassShader->decrementAndDelete();
+
 	// memory management
 	screenSurface->decrementAndDelete();
 	screenSurfaceShader->decrementAndDelete();
@@ -90,6 +104,7 @@ void MY_Scene_Main::update(Step * _step){
 	}
 
 
+	// camera movement
 	zoom -= mouse->getMouseWheelDelta();
 	zoom = glm::clamp(zoom, 3.f, 10.f);
 	gameCamPolarCoords.y += (zoom - gameCamPolarCoords.y) * 0.05f;
@@ -112,6 +127,18 @@ void MY_Scene_Main::update(Step * _step){
 	gameCamPolarCoords.x += _step->deltaTimeCorrection * 0.005f * orbitalSpeed;
 
 	gameCam->firstParent()->translate(glm::vec3(glm::sin(gameCamPolarCoords.x) * gameCamPolarCoords.y, orbitalHeight, glm::cos(gameCamPolarCoords.x) * gameCamPolarCoords.y), false);
+
+
+	// watering
+	if(mouse->rightDown()){
+		grassShaderOffset->yOffset += 0.001f;
+		grassShaderOffset->makeDirty();
+	}else{
+		grassShaderOffset->yOffset -= 0.0001f;
+		grassShaderOffset->makeDirty();
+	}
+	grassShaderOffset->yOffset = glm::clamp(grassShaderOffset->yOffset, 0.f, 0.5f);
+
 
 	// Scene update
 	MY_Scene_Base::update(_step);

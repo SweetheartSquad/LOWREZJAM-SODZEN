@@ -4,6 +4,7 @@
 
 class RenderSurface;
 class StandardFrameBuffer;
+class ShaderComponentUvOffset;
 
 class MY_Scene_Main : public MY_Scene_Base{
 public:
@@ -20,6 +21,9 @@ public:
 	float orbitalHeight, targetOrbitalHeight;
 	float mouseX;
 	float mouseY;
+
+	ComponentShaderBase * grassShader;
+	ShaderComponentUvOffset * grassShaderOffset;
 
 	virtual void update(Step * _step) override;
 	virtual void render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions) override;
