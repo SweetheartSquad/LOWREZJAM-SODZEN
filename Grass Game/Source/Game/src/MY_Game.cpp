@@ -27,3 +27,12 @@ void MY_Game::addSplashes(){
 	// add custom splashes
 	//addSplash(new Scene_Splash(this, MY_ResourceManager::globalAssets->getTexture("DEFAULT")->texture, MY_ResourceManager::globalAssets->getAudio("DEFAULT")->sound));
 }
+
+void MY_Game::update(Step * _step){
+	glm::uvec2 sd = sweet::getWindowDimensions();
+	if(sd.x != sd.y){
+		int s = glm::min(sd.x, sd.y);
+		glfwSetWindowSize(sweet::currentContext, s, s);
+	}
+	Game::update(_step);
+}

@@ -8,4 +8,6 @@ public:
 	~MY_Game();
 
 	void addSplashes() override;
+
+	virtual void update(Step * _step) override;
 };
