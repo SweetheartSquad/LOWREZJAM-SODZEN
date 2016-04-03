@@ -55,5 +55,14 @@
   		"src": "menu.png",
   		"generateMipmaps": false
   	}
+
+  	,{
+  		"type":"audio",
+  		"id": "BGM",
+  		"src":"wee-oo-ee-oo.ogg",
+  		"stream":true,
+  		"positional":false,
+  		"category":"music"
+  	}
   ]
 }

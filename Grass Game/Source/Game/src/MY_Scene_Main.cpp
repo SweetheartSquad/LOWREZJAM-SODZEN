@@ -12,6 +12,7 @@
 #include <shader\ShaderComponentDiffuse.h>
 #include <shader\ShaderComponentMVP.h>
 #include <shader\ShaderComponentUvOffset.h>
+#include <shader\ShaderComponentHsv.h>
 
 MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	MY_Scene_Base(_game),
@@ -24,7 +25,8 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	orbitalHeight(3),
 	targetOrbitalHeight(orbitalHeight),
 	mouseX(0),
-	mouseY(0)
+	mouseY(0),
+	decaying(true)
 {
 	// memory management
 	screenSurface->incrementReferenceCount();
@@ -39,6 +41,7 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	grassShader->addComponent(new ShaderComponentDiffuse(grassShader));
 	grassShader->addComponent(new ShaderComponentTexture(grassShader));
 	grassShader->addComponent(grassShaderOffset = new ShaderComponentUvOffset(grassShader));
+	grassShader->addComponent(grassShaderHsv = new ShaderComponentHsv(grassShader, 0, 1, 1));
 	grassShader->compileShader();
 	grassShader->incrementReferenceCount();
 	grassShader->name = "grass shader";
@@ -81,6 +84,12 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	can->mesh->setScaleMode(GL_NEAREST);
 	gameCam->childTransform->addChild(can);
 
+
+	grassDecayTimer = new Timeout(1.5f, [this](sweet::Event * _event){
+		decaying = true;
+	});
+	childTransform->addChild(grassDecayTimer, false);
+
 	sweet::setCursorMode(GLFW_CURSOR_NORMAL);
 }
 
@@ -115,11 +124,17 @@ void MY_Scene_Main::update(Step * _step){
 
 	if(mouse->leftDown()){
 		if(!mouse->leftJustPressed()){
-			orbitalSpeed += ((mouse->mouseX() - mouseX) - orbitalSpeed) * 0.1f;
-			targetOrbitalHeight -= ((mouse->mouseY() - mouseY)) * 0.025f;
+			orbitalSpeed += ((mouse->mouseX(false) - mouseX) - orbitalSpeed) * 0.1f;
+			targetOrbitalHeight -= ((mouse->mouseY(false) - mouseY)) * 0.025f;
+		}else{
+			sweet::setCursorMode(GLFW_CURSOR_DISABLED);
 		}
-		mouseX = mouse->mouseX();
-		mouseY = mouse->mouseY();
+		mouseX = mouse->mouseX(false);
+		mouseY = mouse->mouseY(false);
+	}
+
+	if(mouse->leftJustReleased()){
+		sweet::setCursorMode(GLFW_CURSOR_NORMAL);
 	}
 	
 	targetOrbitalHeight = glm::clamp(targetOrbitalHeight, 1.f, 10.f);
@@ -136,9 +151,15 @@ void MY_Scene_Main::update(Step * _step){
 	if(mouse->rightDown() || orbitalHeight > 7.5){
 		grassShaderOffset->yOffset += 0.001f;
 		grassShaderOffset->makeDirty();
-	}else{
+
+		grassShaderHsv->setHue(grassShaderHsv->getHue() + (0 - grassShaderHsv->getHue()) * 0.1f);
+		decaying = false;
+		grassDecayTimer->restart();
+	}else if(decaying){
 		grassShaderOffset->yOffset -= 0.0001f;
 		grassShaderOffset->makeDirty();
+
+		grassShaderHsv->setHue(glm::max(-25/360.f, grassShaderHsv->getHue() - 0.0001f));
 	}
 	grassShaderOffset->yOffset = glm::clamp(grassShaderOffset->yOffset, 0.f, 0.5f);
 

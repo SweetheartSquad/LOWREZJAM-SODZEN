@@ -5,6 +5,7 @@
 class RenderSurface;
 class StandardFrameBuffer;
 class ShaderComponentUvOffset;
+class ShaderComponentHsv;
 
 class MY_Scene_Main : public MY_Scene_Base{
 public:
@@ -24,6 +25,9 @@ public:
 
 	ComponentShaderBase * grassShader;
 	ShaderComponentUvOffset * grassShaderOffset;
+	ShaderComponentHsv * grassShaderHsv;
+	Timeout * grassDecayTimer;
+	bool decaying;
 
 	virtual void update(Step * _step) override;
 	virtual void render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions) override;
