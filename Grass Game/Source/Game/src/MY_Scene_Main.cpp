@@ -44,6 +44,18 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	grassShader->name = "grass shader";
 	
 
+	//camera
+	gameCam = new PerspectiveCamera();
+	childTransform->addChild(gameCam);
+	cameras.push_back(gameCam);
+	activeCamera = gameCam;
+
+	// light
+	DirectionalLight * l = new DirectionalLight(glm::vec3(1), 0.99999);
+	childTransform->addChild(l)->translate(1,1,1);
+	lights.push_back(l);
+
+	// meshes
 	MeshEntity * clouds = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("CLOUDS")->meshes.at(0), baseShader);
 	clouds->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("CLOUDS")->texture);
 	clouds->mesh->setScaleMode(GL_NEAREST);
@@ -67,18 +79,9 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	can = new MeshEntity(MY_ResourceManager::globalAssets->getMesh("CAN")->meshes.at(0), baseShader);
 	can->mesh->pushTexture2D(MY_ResourceManager::globalAssets->getTexture("CAN")->texture);
 	can->mesh->setScaleMode(GL_NEAREST);
-	childTransform->addChild(can);
+	gameCam->childTransform->addChild(can);
 
 	sweet::setCursorMode(GLFW_CURSOR_NORMAL);
-
-	gameCam = new PerspectiveCamera();
-	childTransform->addChild(gameCam);
-	cameras.push_back(gameCam);
-	activeCamera = gameCam;
-
-	DirectionalLight * l = new DirectionalLight(glm::vec3(1), 0.99999);
-	childTransform->addChild(l)->translate(1,1,1);
-	lights.push_back(l);
 }
 
 MY_Scene_Main::~MY_Scene_Main(){
@@ -120,7 +123,7 @@ void MY_Scene_Main::update(Step * _step){
 	}
 	
 	targetOrbitalHeight = glm::clamp(targetOrbitalHeight, 1.f, 10.f);
-	orbitalSpeed = glm::clamp(orbitalSpeed, -15.f, 15.f);
+	orbitalSpeed = glm::clamp(orbitalSpeed, -64.f, 64.f);
 
 	orbitalHeight += (targetOrbitalHeight - orbitalHeight) * 0.1f;
 
@@ -130,7 +133,7 @@ void MY_Scene_Main::update(Step * _step){
 
 
 	// watering
-	if(mouse->rightDown()){
+	if(mouse->rightDown() || orbitalHeight > 7.5){
 		grassShaderOffset->yOffset += 0.001f;
 		grassShaderOffset->makeDirty();
 	}else{
@@ -143,9 +146,11 @@ void MY_Scene_Main::update(Step * _step){
 	// Scene update
 	MY_Scene_Base::update(_step);
 	
+	can->childTransform->lookAt(glm::vec3(0, 1.5, 0));
 	gameCam->lookAtSpot = glm::vec3(0,1.5,0);
 	gameCam->forwardVectorRotated = gameCam->lookAtSpot - gameCam->getWorldPos();
-	//gameCam->childTransform->lookAt(glm::vec3(0));
+	gameCam->rightVectorRotated = glm::cross(gameCam->forwardVectorRotated, glm::vec3(0, 1, 0));
+	can->childTransform->translate(gameCam->forwardVectorRotated*0.25f * ((orbitalHeight+zoom) * 0.1f) + gameCam->rightVectorRotated*0.5f * (1.2f - orbitalHeight * 0.1f) - gameCam->upVectorRotated*1.5f, false);
 }
 
 void MY_Scene_Main::render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions){

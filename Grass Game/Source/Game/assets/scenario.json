@@ -47,6 +47,13 @@
   		"id": "GRASS",
   		"src": "grass.png",
   		"generateMipmaps": false
+  	},
+
+  	{
+  		"type": "texture",
+  		"id": "MENU",
+  		"src": "menu.png",
+  		"generateMipmaps": false
   	}
   ]
 }
