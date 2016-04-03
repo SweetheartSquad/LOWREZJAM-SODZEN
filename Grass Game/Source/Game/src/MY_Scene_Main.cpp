@@ -13,7 +13,14 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	MY_Scene_Base(_game),
 	screenSurfaceShader(new Shader("assets/RenderSurface_1", false, true)),
 	screenSurface(new RenderSurface(screenSurfaceShader, true)),
-	screenFBO(new StandardFrameBuffer(true))
+	screenFBO(new StandardFrameBuffer(true)),
+	zoom(5),
+	gameCamPolarCoords(0, zoom),
+	orbitalSpeed(1),
+	orbitalHeight(3),
+	targetOrbitalHeight(orbitalHeight),
+	mouseX(0),
+	mouseY(0)
 {
 	// memory management
 	screenSurface->incrementReferenceCount();
@@ -30,7 +37,12 @@ MY_Scene_Main::MY_Scene_Main(Game * _game) :
 	CubeMap * cubemap = new CubeMap("assets/textures/cubemap", "png");
 	childTransform->addChild(cubemap);
 
-	sweet::setCursorMode(GLFW_CURSOR_DISABLED);
+	sweet::setCursorMode(GLFW_CURSOR_NORMAL);
+
+	gameCam = new PerspectiveCamera();
+	childTransform->addChild(gameCam);
+	cameras.push_back(gameCam);
+	activeCamera = gameCam;
 }
 
 MY_Scene_Main::~MY_Scene_Main(){
@@ -57,8 +69,34 @@ void MY_Scene_Main::update(Step * _step){
 	}
 
 
+	zoom += mouse->getMouseWheelDelta();
+	zoom = glm::clamp(zoom, 1.f, 10.f);
+	gameCamPolarCoords.y += (zoom - gameCamPolarCoords.y) * 0.05f;
+	gameCamPolarCoords.y = glm::clamp(gameCamPolarCoords.y, 1.f, 10.f);
+
+	if(mouse->leftDown()){
+		if(!mouse->leftJustPressed()){
+			orbitalSpeed += ((mouse->mouseX() - mouseX) - orbitalSpeed) * 0.1f;
+			targetOrbitalHeight += ((mouse->mouseY() - mouseY)) * 0.025f;
+		}
+		mouseX = mouse->mouseX();
+		mouseY = mouse->mouseY();
+	}
+	
+	targetOrbitalHeight = glm::clamp(targetOrbitalHeight, 1.f, 5.f);
+	orbitalSpeed = glm::clamp(orbitalSpeed, -5.f, 5.f);
+
+	orbitalHeight += (targetOrbitalHeight - orbitalHeight) * 0.1f;
+
+	gameCamPolarCoords.x += _step->deltaTimeCorrection * 0.005f * orbitalSpeed;
+	gameCam->firstParent()->translate(glm::vec3(glm::sin(gameCamPolarCoords.x) * gameCamPolarCoords.y, orbitalHeight, glm::cos(gameCamPolarCoords.x) * gameCamPolarCoords.y), false);
+
 	// Scene update
 	MY_Scene_Base::update(_step);
+	
+	gameCam->lookAtSpot = glm::vec3(0);
+	gameCam->forwardVectorRotated = gameCam->lookAtSpot - gameCam->getWorldPos();
+	//gameCam->childTransform->lookAt(glm::vec3(0));
 }
 
 void MY_Scene_Main::render(sweet::MatrixStack * _matrixStack, RenderOptions * _renderOptions){
